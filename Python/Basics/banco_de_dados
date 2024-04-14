@@ -1,0 +1,13 @@
+lista = []
+coisa = None
+
+while True:
+    coisa = input ("Digite algo para inserir na lista, ou presione S para sair: ").lower()
+
+    if coisa == "s":
+        print (f"A sua lista contém os seguintes itens: {lista}, e contém {len(lista)} itens.")
+        break
+
+    else:
+        lista.append(coisa)
+        continue
