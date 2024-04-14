@@ -1,0 +1,26 @@
+import requests
+import re
+
+# Faz o request para a URL e obtém o conteúdo da página
+url = "http://www.fatecsaocaetano.edu.br/home.php?pageid=2"
+response = requests.get(url)
+html_content = response.text
+
+# Usa expressão regular para remover caracteres indesejados, mantendo hífens e apóstrofos
+html_content_cleaned = re.sub(r'[^a-zA-Z\'\- ]', ' ', html_content)
+
+# Usa expressão regular para dividir o texto em palavras
+words = re.findall(r'\b\w+\b', html_content_cleaned)
+
+# Converte todas as letras maiúsculas para minúsculas
+words_lower = [word.lower() for word in words]
+
+# Remove palavras duplicadas e ordena
+unique_words = sorted(set(words_lower))
+
+# Escreve a lista de palavras únicas em um arquivo
+with open('wordlist.txt', 'w') as f:
+    for word in unique_words:
+        f.write(word + '\n')
+
+print("Wordlist criada com sucesso em wordlist.txt")
