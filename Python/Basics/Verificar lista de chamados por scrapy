@@ -1,0 +1,66 @@
+import scrapy
+from scrapy.crawler import CrawlerProcess
+from scrapy.http import FormRequest
+import smtplib
+import time
+import schedule
+
+class ChamadosSpider(scrapy.Spider):
+    name = 'chamados'
+    start_urls = ['URL_DA_PÁGINA_DE_LOGIN']  # Substitua pela URL de login
+
+    def parse(self, response):
+        # Preencher o formulário de login
+        return FormRequest.from_response(
+            response,
+            formdata={'username': 'SEU_USUÁRIO', 'password': 'SUA_SENHA'},  # Substitua pelo seu usuário e senha
+            callback=self.after_login
+        )
+
+    def after_login(self, response):
+        # Procurar pelo texto que representa o contador de chamados
+        contador_texto = response.css('span::text').get()
+        # Verificar se o texto contém o número de chamados
+        if contador_texto and "(1)" in contador_texto:
+            self.logger.info("Novo chamado detectado!")
+            # Enviar notificação por e-mail
+            self.enviar_notificacao()
+
+    def enviar_notificacao(self):
+        remetente = "seu_email@outlook.com"  # Seu e-mail Outlook
+        senha = "sua_senha"  # Sua senha do e-mail Outlook
+        destinatario = "seu_email@outlook.com"  # E-mail de destino
+        assunto = "Novo chamado na plataforma de atendimento"
+        mensagem = "Um novo chamado foi recebido na plataforma de atendimento."
+
+        # Configuração do servidor SMTP do Outlook
+        server = smtplib.SMTP('smtp.office365.com', 587)
+        server.starttls()
+        server.login(remetente, senha)
+
+        # Formatação do e-mail
+        corpo_email = f"From: {remetente}\nTo: {destinatario}\nSubject: {assunto}\n\n{mensagem}"
+
+        # Envio do e-mail
+        server.sendmail(remetente, destinatario, corpo_email)
+        print("E-mail de notificação enviado com sucesso!")
+
+        # Fechar a conexão com o servidor
+        server.quit()
+
+# Função para executar o spider
+def run_spider():
+    process = CrawlerProcess(settings={
+        'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'LOG_ENABLED': False
+    })
+    process.crawl(ChamadosSpider)
+    process.start()
+
+# Agendar a execução do spider a cada minuto
+schedule.every(1).minutes.do(run_spider)
+
+# Loop para executar a agenda
+while True:
+    schedule.run_pending()
+    time.sleep(1)
